@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster Raid - Ultimate Legends (Enhanced Edition)</title>
+    <style>
+        :root {
+            --bg-main: #09090b; --bg-panel: #18181b; --bg-card: #27272a;
+            --accent: #f59e0b; --text-main: #f4f4f5; --text-muted: #a1a1aa;
+            --hp-color: #ef4444; --mp-color: #3b82f6; --sp-color: #10b981; 
+            --ult-color: linear-gradient(90deg, #f59e0b, #ef4444);
+            --boss-hp: linear-gradient(90deg, #9333ea, #db2777);
+            --combo-color: #22d3ee; --evolve-color: #ec4899; --trans-color: #38bdf8;
+            --fast-color: #22c55e; --ascend-color: #c084fc;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif; background-color: var(--bg-main);
+            color: var(--text-main); margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            transition: 0.3s;
+        }
+        
+        .top-nav-bar {
+            width: 100%; max-width: 1100px; display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; padding: 0 5px;
+        }
+        .nav-group { display: flex; gap: 8px; }
+        .top-btn {
+            background: #27272a; color: var(--text-main); border: 1px solid #52525b;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
+            display: flex; align-items: center; gap: 4px; transition: 0.2s;
+        }
+        .top-btn:hover { background: #3f3f46; border-color: var(--accent); }
+
+        h1 { color: var(--accent); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; font-size: 22px; }
+        .subtitle { color: var(--text-muted); margin-bottom: 15px; font-size: 13px; }
+        
+        #game-container {
+            width: 100%; max-width: 1100px; background-color: var(--bg-panel);
+            border: 1px solid #3f3f46; border-radius: 12px; padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); transition: max-width 0.3s ease;
+        }
+        #game-container.mobile-mode { max-width: 420px; padding: 15px; }
+
+        .mode-select { display: flex; justify-content: center; gap: 12px; margin-bottom: 15px; }
+        .mode-btn { padding: 8px 16px; background: #27272a; color: #fff; border: 1px solid #52525b; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .mode-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .party-slots { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .slot { 
+            width: 170px; height: 150px; border: 2px dashed #52525b; border-radius: 12px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            cursor: pointer; transition: 0.2s; background: var(--bg-card); text-align: center; padding: 5px;
+        }
+        .slot.filled { border-style: solid; border-color: var(--accent); box-shadow: 0 0 15px rgba(245, 158, 11, 0.15); }
+        .slot-name { font-size: 13px; font-weight: bold; }
+        .slot-gear { font-size: 10px; color: var(--accent); margin-top: 2px; line-height: 1.2; }
+        .slot-level { font-size: 9px; color: var(--ascend-color); font-weight: bold; margin-top: 2px; }
+        .slot-passive { font-size: 8px; color: var(--evolve-color); font-weight: bold; margin-top: 2px; }
+        .slot-trans { font-size: 8px; color: var(--trans-color); font-weight: bold; margin-top: 2px; }
+        .slot-cancel { font-size: 10px; color: #ef4444; margin-top: 3px; display: none; }
+        .slot.filled .slot-cancel { display: block; }
+
+        .lobby-control-bar { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #52525b; flex-wrap: wrap; gap: 10px; }
+        .stage-select-box { display: flex; align-items: center; gap: 10px; }
+        .stage-select-box select { background: #000; color: #fff; border: 1px solid var(--accent); padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        
+        .fast-mode-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold; font-size: 12px; color: var(--fast-color); background: #064e3b; padding: 6px 12px; border-radius: 8px; border: 1px solid #059669; }
+        .fast-mode-toggle input { cursor: pointer; width: 15px; height: 15px; accent-color: var(--fast-color); }
+
+        .class-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; text-align: left; max-height: 280px; overflow-y: auto; padding-right: 5px; }
+        #game-container.mobile-mode .class-grid { grid-template-columns: repeat(2, 1fr); }
+        .class-btn { 
+            background-color: var(--bg-card); color: var(--text-main); border: 1px solid #52525b; 
+            padding: 10px; border-radius: 10px; cursor: pointer; transition: 0.2s; 
+            display: flex; flex-direction: column; gap: 4px; 
+        }
+        .class-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .class-name { font-weight: 800; font-size: 14px; }
+        .class-desc { font-size: 10px; color: var(--text-muted); line-height: 1.3; }
+
+        .panel-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .gold-display { font-size: 15px; font-weight: bold; color: var(--accent); }
+        
+        .primary-btn { 
+            padding: 12px 30px; font-size: 15px; font-weight: bold; 
+            background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: none; border-radius: 25px; 
+            cursor: pointer; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); 
+        }
+
+        .boss-panel { background: #271018; padding: 12px; border-radius: 12px; border: 1px solid #be123c; text-align: center; margin-bottom: 12px; }
+        .boss-name { font-size: 20px; font-weight: 900; color: #fb7185; }
+        .status-tags { display: flex; justify-content: center; gap: 6px; margin: 6px 0; min-height: 22px; flex-wrap: wrap; }
+        
+        /* 툴팁 기능이 포함된 상태이상 태그 */
+        .status-tag { 
+            background: #881337; color: #fecdd3; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; 
+            cursor: help; position: relative;
+        }
+        .status-tag:hover::after {
+            content: attr(data-tooltip);
+            position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+            background: #000; color: #fff; padding: 5px 8px; border-radius: 6px; font-size: 10px;
+            white-space: nowrap; border: 1px solid var(--accent); z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .party-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+        #game-container.mobile-mode .party-panel { grid-template-columns: 1fr; }
+        .hero-card { background-color: var(--bg-card); padding: 10px; border-radius: 10px; border: 2px solid transparent; opacity: 0.5; transition: 0.3s; }
+        .hero-card.active { border-color: var(--accent); opacity: 1; transform: translateY(-2px); }
+        .hero-card.dead { filter: grayscale(100%); opacity: 0.3; }
+        
+        .stat-text { font-size: 10px; margin: 3px 0 2px 0; display: flex; justify-content: space-between; font-weight: bold; }
+        .bar-container { background-color: #000; height: 7px; border-radius: 4px; overflow: hidden; border: 1px solid #3f3f46; }
+        .bar { height: 100%; transition: width 0.3s; }
+        
+        #battle-log { background-color: #000; color: #a3e635; height: 140px; overflow-y: auto; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.4; margin-bottom: 12px; border: 1px solid #52525b; }
+        
+        .action-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 180px; overflow-y: auto; }
+        #game-container.mobile-mode .action-btns { grid-template-columns: repeat(2, 1fr); }
+        .action-btn { 
+            padding: 8px; background-color: #27272a; color: white; border: 1px solid #52525b; 
+            border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; 
+            display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
+        }
+        .action-btn:hover:not(:disabled) { background-color: #3f3f46; border-color: var(--accent); }
+        .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-ult { border-color: var(--accent); color: var(--accent); }
+        .btn-awake { border-color: var(--evolve-color); color: var(--evolve-color); background: #3b0764; }
+        .btn-ascend { border-color: var(--ascend-color); color: var(--ascend-color); background: #3b1b54; }
+        .action-cost { font-size: 9px; color: var(--text-muted); }
+
+        .control-box { display: flex; gap: 10px; justify-content: center; margin-top: 12px; }
+
+        /* 모달 공통 스타일 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: var(--bg-panel); border: 1px solid var(--accent); border-radius: 12px;
+            width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; padding: 25px; position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 15px; right: 15px; background: #ef4444; color: #fff; border: none;
+            border-radius: 50%; width: 30px; height: 30px; font-weight: bold; cursor: pointer;
+        }
+        .dictionary-item { background: var(--bg-card); padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #52525b; }
+        .dictionary-title { color: var(--accent); font-weight: bold; font-size: 14px; margin-bottom: 4px; }
+        .dictionary-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav-bar">
+        <div>
+            <h1>Monster Raid</h1>
+            <div class="subtitle">Ultimate Legends (Enhanced Edition)</div>
+        </div>
+        <div class="nav-group">
+            <button class="top-btn" onclick="openDictionary()">📖 도감/사전</button>
+            <button class="top-btn" onclick="openTutorial()">❓ 튜토리얼</button>
+            <button class="top-btn" id="mode-toggle-btn" onclick="toggleScreenMode()">📱 모바일 모드</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div class="mode-select">
+            <button class="mode-btn active" id="mode-pve-btn" onclick="switchMode('pve')">⚔️ 싱글 레이드 (1~100단)</button>
+            <button class="mode-btn" id="mode-pvp-btn" onclick="switchMode('pvp')">🛡️ 3:3 파티 대전 PVP</button>
+        </div>
+
+        <div id="selection-screen" class="screen active">
+            <h2 style="color: #fff; margin-bottom: 12px; font-size: 16px;" id="select-title">영웅 선택 및 직업 성장 / 장비 강화</h2>
+            
+            <div class="lobby-control-bar">
+                <div class="stage-select-box" id="pve-stage-box">
+                    <span style="font-weight:bold; font-size:12px;">🚩 도전 스테이지:</span>
+                    <select id="stage-select" onchange="changeSelectedStage()"></select>
+                </div>
+                <label class="fast-mode-toggle">
+                    <input type="checkbox" id="fast-mode-checkbox" onchange="toggleFastMode()"> ⚡ Fast Mode (+10000% 보상)
+                </label>
+            </div>
+
+            <div class="party-slots" id="party-slots"></div>
+            <div class="class-grid" id="class-buttons"></div>
+            
+            <div class="panel-controls">
+                <div class="gold-display">💰 골드: <span id="player-gold">500</span>G</div>
+                <button class="primary-btn" id="start-btn" style="display:none;" onclick="startBattle()">전투 시작!</button>
+            </div>
+        </div>
+
+        <div id="battle-screen" class="screen">
+            <div class="boss-panel">
+                <div class="boss-name" id="boss-name">Boss Name</div>
+                <div id="boss-phase" style="color: var(--accent); font-size: 12px; margin: 3px 0; font-weight: bold;">[전투 중]</div>
+                <div class="status-tags" id="boss-statuses"></div>
+                <div class="stat-text" style="color: white; margin-top: 5px;"><span>HP</span> <span id="boss-hp-txt">0 / 0</span></div>
+                <div class="bar-container" style="height: 12px;"><div id="boss-hp" class="bar" style="background: var(--boss-hp);"></div></div>
+            </div>
+
+            <div class="party-panel" id="party-panel"></div>
+            <div id="battle-log"></div>
+            
+            <div class="action-btns" id="action-btns"></div>
+            
+            <div class="control-box" id="next-control" style="display:none;">
+                <button class="primary-btn" onclick="nextStage()">다음 스테이지 진행 ➔</button>
+                <button class="mode-btn" onclick="returnToSelection()">장비 강화 / 로비로</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="dictionary-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeDictionary()">X</button>
+            <h2 style="color: var(--accent); margin-bottom: 15px;">📖 게임 백과사전 및 고유명사</h2>
+            <div id="dictionary-list"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="tutorial-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeTutorial()">X</button>
+            <h2 style="color: var(--accent); margin-bottom: 15px;">❓ 게임 가이드 및 튜토리얼</h2>
+            <div style="font-size: 13px; line-height: 1.6; color: var(--text-main);">
+                <p><b>1. 영웅 편성:</b> PVE 모드는 3인, PVP 모드는 3:3 파티를 구성합니다.</p>
+                <p><b>2. 스택별 효과:</b> 출혈, 화상, 중독, 징표 등 상태이상은 중첩될 수 있으며, 특정 콤보 스킬 사용 시 누적 스택에 비례해 거대한 폭발 피해를 줍니다.</p>
+                <p><b>3. 직업 레벨 & 각성:</b> 스킬을 사용하여 직업 레벨을 10까지 올리면 **'직업 각성'** 버튼이 활성화되어 모든 스킬이 강력하게 리모델링됩니다.</p>
+                <p><b>4. 승천의 길:</b> 각성 완료 후 보스 3마리를 토벌하고 직업 레벨이 5 이상이면 **승천의 길**이 열리며 개성 공격 1개, 자체 버프 2개, 방어 스킬 2개의 신규 스킬 5종을 획득합니다.</p>
+                <p><b>5. 화면 전환:</b> 상단 우측 버튼으로 PC 화면과 모바일 화면 모드를 간편하게 전환하세요!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'attack') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'skill') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'ult') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.5);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now); osc.stop(now + 0.5);
+            } else if (type === 'trans') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(350, now);
+                osc.frequency.exponentialRampToValueAtTime(1400, now + 0.6);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.start(now); osc.stop(now + 0.6);
+            } else if (type === 'victory') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.15);
+                osc.frequency.setValueAtTime(783.99, now + 0.3);
+                osc.frequency.setValueAtTime(1046.50, now + 0.45);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+                osc.start(now); osc.stop(now + 0.7);
+            }
+        }
+
+        const dictionaryData = [
+            { title: "출혈 (Bleeding)", desc: "적에게 지속적인 상처를 입혀 스택당 매 턴 추가 피해를 부여하고 콤보 스킬의 재료가 됩니다." },
+            { title: "화상 (Burn)", desc: "뜨거운 열기로 대상의 체력을 태워버리며, 스택이 쌓일수록 매 턴 강력한 도트 피해를 가합니다." },
+            { title: "중독 (Poison)", desc: "치명적인 독이 체내에 퍼져 스택 비례 지속적인 피해를 주고 방어력을 약화시킵니다." },
+            { title: "직업 각성", desc: "직업 레벨 10 달성 시 오픈되며, 모든 기존 스킬의 연출과 계수가 화려하게 리모델링 및 강화됩니다." },
+            { title: "승천의 길", desc: "각성 후 보스 3마리 토벌 및 직업 레벨 5 이상 시 개방되며, 개성 공격 1 + 자체 버프 2 + 방어 2의 신규 스킬 5종을 획득합니다." },
+            { title: "Fast Mode", desc: "체크 시 경험치와 골드가 100배로 폭증하여 초고속 성장이 가능한 모드입니다." }
+        ];
+
+        function openDictionary() {
+            playSound('click');
+            const listEl = document.getElementById('dictionary-list');
+            listEl.innerHTML = '';
+            dictionaryData.forEach(item => {
+                listEl.innerHTML += `
+                    <div class="dictionary-item">
+                        <div class="dictionary-title">${item.title}</div>
+                        <div class="dictionary-desc">${item.desc}</div>
+                    </div>`;
+            });
+            document.getElementById('dictionary-modal').style.display = 'flex';
+        }
+        function closeDictionary() { document.getElementById('dictionary-modal').style.display = 'none'; }
+
+        function openTutorial() { playSound('click'); document.getElementById('tutorial-modal').style.display = 'flex'; }
+        function closeTutorial() { document.getElementById('tutorial-modal').style.display = 'none'; }
+
+        let isMobileView = false;
+        function toggleScreenMode() {
+            playSound('click');
+            isMobileView = !isMobileView;
+            const container = document.getElementById('game-container');
+            const btn = document.getElementById('mode-toggle-btn');
+            if (isMobileView) {
+                container.classList.add('mobile-mode');
+                btn.innerText = '💻 PC 모드';
+            } else {
+                container.classList.remove('mobile-mode');
+                btn.innerText = '📱 모바일 모드';
+            }
+        }
+
+        const classGearData = {
+            warrior: ['철검', '강철검', '기사의 검', '정밀의 검', '화염의 검', '영웅의 검', '전설의 검', '빛의 심판자', '신화의 서곡', '용살검'],
+            assassin: ['녹슨 단검', '예리한 단검', '암살자의 비수', '그림자 단검', '독니 단검', '침묵의 칼날', '암흑의 송곳니', '망자의 비수', '칼날 폭풍', '팬텀 나이트'],
+            mage: ['수련자의 지팡이', '마력의 지팡이', '화염 지팡이', '얼음 지팡이', '폭풍의 지팡이', '현자의 지팡이', '대마법사의 지팡이', '성스러운 지팡이', '천공의 지팡이', '월드 오브 아크메이지'],
+            priest: ['기도서', '성스러운 봉헌', '치유의 지팡이', '신성한 메이스', '사제의 홀', '성기사의 십자가', '천상의 인도자', '축복의 지팡이', '빛의 강림', '구원의 서'],
+            archer: ['단궁', '헌터의 활', '강화 복합궁', '정밀의 롱보우', '폭풍의 활', '엘븐 바우', '사냥꾼의 전설', '천공의 궁', '신화의 활', '윈드러너'],
+            guardian: ['나무 방패검', '철제 방패검', '수호자의 검', '기사단의 중검', '철벽의 방패검', '거인의 검', '용맹의 방패검', '성기사의 검', '불굴의 수호검', '에이지스 소드'],
+            warlock: ['낡은 완드', '저주받은 뼈다귀', '어둠의 완드', '영혼의 지팡이', '피의 완드', '심연의 지팡이', '재앙의 완드', '악마의 뼈', '지옥의 홀', '네크로노미콘'],
+            berserker: ['수렵용 도끼', '전투도끼', '광기의 양손도끼', '파괴자의 도끼', '화염 도끼', '학살자의 도끼', '거인의 도끼', '파멸의 토마호크', '타이탄의 도끼', '베르세르크 소드'],
+            bard: ['낡은 류트', '음유시인의 하프', '감미로운 류트', '환상의 바이올린', '마법의 하프', '천상의 류트', '영웅의 악기', '바람의 선율', '세이렌의 노래', '오르페우스의 하프'],
+            spellblade: ['마력의 단검', '비전의 검', '마검', '룬소드', '속성 마검', '마도사의 검', '정령의 검', '테에르 소드', '아스트랄 블레이드', '소울 브레이커']
+        };
+
+        function createAscensionSkills(className) {
+            return [
+                { name: `🌟 [승천] ${className}의 개성 발현`, cost: 30, dmg: 3.5, applyStatus: '초월각인', ultGen: 35, level: 1, exp: 0, isAscend: true, type: 'atk' },
+                { name: `🛡️ [승천] 철벽의 방어 진형`, cost: 25, dmg: 0, heal: 0.3, isAoeHeal: false, ultGen: 25, level: 1, exp: 0, isAscend: true, type: 'def' },
+                { name: `✨ [승천] 절대 수호의 결계`, cost: 40, dmg: 0.5, heal: 0.4, isAoeHeal: true, ultGen: 30, level: 1, exp: 0, isAscend: true, type: 'def' },
+                { name: `💪 [승천] 투지의 영구 버프 I`, cost: 35, dmg: 0, applyBuff: '공격력증가', buffVal: 0.4, isAoeBuff: true, ultGen: 30, level: 1, exp: 0, isAscend: true, type: 'buff' },
+                { name: `🔥 [승천] 잠재력 폭발 버프 II`, cost: 45, dmg: 0, applyBuff: '공격력증가', buffVal: 0.6, isAoeBuff: true, ultGen: 35, level: 1, exp: 0, isAscend: true, type: 'buff' }
+            ];
+        }
+
+        const baseClassData = {};
+        const rawClassBase = {
+            warrior: { name: '전사', role: '근접 딜러', hp: 600, atk: 45, res: 100, resType: 'SP', desc: '출혈 스택 ➔ 파쇄 베기 폭딜', skills: [
+                { name: '기본 공격', cost: 0, dmg: 1.0, ultGen: 15, level: 1, exp: 0 },
+                { name: '출혈 베기', cost: 20, dmg: 1.3, applyStatus: '출혈', stackable: true, ultGen: 20, level: 1, exp: 0 },
+                { name: '파쇄 베기', cost: 35, dmg: 1.5, consumeStatus: '출혈', comboDmg: 2.2, ultGen: 25, level: 1, exp: 0 },
+                { name: '전투의 함성 (승천 대기)', cost: 40, dmg: 0, heal: 0.15, isAoeHeal: true, ultGen: 30, level: 1, exp: 0 },
+                { name: '대지 분쇄 (궁)', cost: 100, isUlt: true, dmg: 4.5, applyStatus: '기절', level: 1, exp: 0 }
+            ], awakeSkill: { name: '✨ 천공 참수 (각성)', cost: 40, dmg: 5.5, applyStatus: '기절', isAwake: true } },
+
+            assassin: { name: '암살자', role: '단일 폭딜', hp: 400, atk: 65, res: 120, resType: 'SP', desc: '표식 스택 ➔ 그림자 습격', skills: [
+                { name: '단검 투척', cost: 0, dmg: 1.2, ultGen: 15, level: 1, exp: 0 },
+                { name: '죽음의 표식', cost: 25, dmg: 1.0, applyStatus: '표식', stackable: true, ultGen: 20, level: 1, exp: 0 },
+                { name: '그림자 습격', cost: 40, dmg: 1.5, consumeStatus: '표식', comboDmg: 2.5, ultGen: 25, level: 1, exp: 0 },
+                { name: '독 안개 (승천 대기)', cost: 45, dmg: 1.8, applyStatus: '중독', stackable: true, ultGen: 30, level: 1, exp: 0 },
+                { name: '절대 암살 (궁)', cost: 100, isUlt: true, dmg: 6.0, consumeStatus: '표식', comboDmg: 3.5, level: 1, exp: 0 }
+            ], awakeSkill: { name: '✨ 그림자 사형 집행 (각성)', cost: 45, dmg: 7.0, consumeStatus: '표식', comboDmg: 4.0, isAwake: true } },
+
+            mage: { name: '마법사', role: '광역 마법', hp: 350, atk: 70, res: 200, resType: 'MP', desc: '화상 스택 ➔ 불기둥 작렬', skills: [
+                { name: '마력탄', cost: 0, dmg: 1.0, ultGen: 15, level: 1, exp: 0 },
+                { name: '화염구', cost: 30, dmg: 1.7, applyStatus: '화상', stackable: true, ultGen: 20, level: 1, exp: 0 },
+                { name: '불기둥', cost: 45, dmg: 1.5, consumeStatus: '화상', comboDmg: 2.4, ultGen: 25, level: 1, exp: 0 },
+                { name: '얼음 방패 (승천 대기)', cost: 40, dmg: 0.5, heal: 0.2, isAoeHeal: false, ultGen: 30, level: 1, exp: 0 },
+                { name: '메테오 (궁)', cost: 100, isUlt: true, dmg: 5.5, applyStatus: '화상', stackable: true, level: 1, exp: 0 }
+            ], awakeSkill: { name: '✨ 아마겟돈 (각성)', cost: 60, dmg: 7.5, applyStatus: '화상', stackable: true, isAwake: true } },
+
+            priest: { name: '사제', role: '메인 힐러/부활', hp: 450, atk: 25, res: 180, resType: 'MP', desc: '회복 및 아군 부활 궁극기 보유', skills: [
+                { name: '신성한 빛', cost: 0, dmg: 1.0, ultGen: 15, level: 1, exp: 0 },
+                { name: '치유의 손길', cost: 25, dmg: 0, heal: 0.35, isAoeHeal: false, restoreRes: 25, ultGen: 25, level: 1, exp: 0 },
+                { name: '천벌', cost: 35, dmg: 1.2, applyStatus: '성광', stackable: true, ultGen: 20, level: 1, exp: 0 },
+                { name: '신성 폭발 (승천 대기)', cost: 45, dmg: 1.0, consumeStatus: '성광', comboDmg: 2.2, heal: 0.2, isAoeHeal: true, restoreRes: 30, ultGen: 30, level: 1, exp: 0 },
+                { name: '신의 가호 (궁)', cost: 100, isUlt: true, dmg: 0, heal: 1.0, isAoeHeal: true, restoreRes: 60, isRevive: true, reviveHp: 0.5, level: 1, exp: 0 }
+            ], awakeSkill: { name: '✨ 천상의 부활 (각성)', cost: 50, dmg: 1.5, heal: 0.8, isAoeHeal: true, restoreRes: 50, isAwake: true } },
+
+            archer: { name: '궁수', role: '원거리 딜러', hp: 420, atk: 55, res: 130, resType: 'SP', desc: '중독 스택 ➔ 맹독 폭발', skills: [
+                { name: '활쏘기', cost: 0, dmg: 1.0, ultGen: 15, level: 1, exp: 0 },
+                { name: '독 화살', cost: 25, dmg: 1.3, applyStatus: '중독', stackable: true, ultGen: 20, level: 1, exp: 0 },
+                { name: '맹독 폭발', cost: 40, dmg: 1.5, consumeStatus: '중독', comboDmg: 2.5, ultGen: 25, level: 1, exp: 0 },
+                { name: '일제 사격 (승천 대기)', cost: 45, dmg: 2.2, ultGen: 25, level: 1, exp: 0 },
+                { name: '폭풍의 눈 (궁)', cost: 100, isUlt: true, dmg: 5.0, applyStatus: '표식', stackable: true, level: 1, exp: 0 }
+            ], awakeSkill: { name: '✨ 스타폴 레인 (각성)', cost: 45, dmg: 6.0, applyStatus: '중독', stackable: true, isAwake: true } },
+
+            guardian: { name: '수호기사', role: '탱커/제어', hp: 800, atk: 35, res: 150, resType: 'SP', desc: '기절 스택 ➔ 빛의 심판', skills: [
+                { name: '방패 치기', cost: 0, dmg: 1.0, ultGen: 15, level: 1, exp: 0 },
+                { name: '도발의 일격', cost: 20, dmg: 1.2, heal: 0.1, isAoeHeal: false, ultGen: 25, level: 1, exp: 0 },
+                { name: '방패 강타', cost: 45, dmg: 1.8, applyStatus: '기절', stackable: true, ultGen: 25, level: 1, exp: 0 },
+                { name: '빛의 심판 (승천 대기)', cost: 50, dmg: 1.5, consumeStatus: '기절', comboDmg: 2.8, ultGen: 30, level: 1, exp: 0 },
+                { name: '절대 방벽 (궁)', cost: 100, isUlt: true, dmg: 2.0, heal: 0.5, isAoeHeal: true, level: 1, exp: 0 }
+            ], awakeSkill: { name: '✨ 타이탄 워치 (각성)', cost: 40, dmg: 3.5, heal: 0.4, isAoeHeal: true, applyStatus: '기절', isAwake: true } },
+
+            warlock: { name: '흑마법사', role: '저주/흡혈', hp: 380, atk: 65, res: 160, resType: 'MP', desc: '저주 스택 ➔ 영혼 흡수', skills: [
+                { name: '어둠의 화살', cost: 0, dmg: 1.2, ultGen: 15, level: 1, exp: 0 },
+                { name: '파멸의 저주', cost: 35, dmg: 1.5, applyStatus: '저주', stackable: true, ultGen: 20, level: 1, exp: 0 },
+                { name: '영혼 흡수', cost: 45, dmg: 1.5, consumeStatus: '저주', comboDmg: 2.5, heal: 0.3, ultGen: 25, level: 1, exp: 0 },
+                { name: '피의 제물 (승천 대기)', cost: 20, dmg: 2.5, heal: -0.1, ultGen: 35, level: 1, exp: 0 },
+                { name: '심연 소환 (궁)', cost: 100, isUlt: true, dmg: 6.0, applyStatus: '저주', stackable: true, level: 1, exp: 0 }
+            ], awakeSkill: { name: '✨ 소울 이터 (각성)', cost: 50, dmg: 6.5, consumeStatus: '저주', comboDmg: 4.5, heal: 0.5, isAwake: true } },
+
+            berserker: { name: '광전사', role: '방깎 딜러', hp: 550, atk: 50, res: 100, resType: 'SP', desc: '방깎 스택 ➔ 참수 작렬', skills: [
+                { name: '분노의 베기', cost: 0, dmg: 1.2, ultGen: 15, level: 1, exp: 0 },
+                { name: '갑옷 부수기', cost: 30, dmg: 1.8, applyStatus: '방깎', stackable: true, ultGen: 20, level: 1, exp: 0 },
+                { name: '참수', cost: 45, dmg: 1.5, consumeStatus: '방깎', comboDmg: 3.0, ultGen: 25, level: 1, exp: 0 },
+                { name: '피의 갈증 (승천 대기)', cost: 40, dmg: 2.0, heal: 0.2, ultGen: 20, level: 1, exp: 0 },
+                { name: '대차륜 (궁)', cost: 100, isUlt: true, dmg: 5.5, applyStatus: '출혈', stackable: true, level: 1, exp: 0 }
+            ], awakeSkill: { name: '✨ 학살의 광기 (각성)', cost: 45, dmg: 6.5, consumeStatus: '방깎', comboDmg: 3.8, isAwake: true } },
+
+            bard: { name: '음유시인', role: '버퍼/부활', hp: 420, atk: 30, res: 150, resType: 'MP', desc: '아군 버프 및 부활 진혼곡 보유', skills: [
+                { name: '불협화음', cost: 0, dmg: 1.0, ultGen: 15, level: 1, exp: 0 },
+                { name: '자장가', cost: 35, dmg: 0.5, applyStatus: '수면', stackable: true, ultGen: 20, level: 1, exp: 0 },
+                { name: '용기의 선율', cost: 35, dmg: 0, applyBuff: '공격력증가', buffVal: 0.3, isAoeBuff: true, restoreRes: 25, ultGen: 25, level: 1, exp: 0 },
+                { name: '환희의 송가 (승천 대기)', cost: 45, dmg: 1.5, consumeStatus: '수면', comboDmg: 2.2, heal: 0.25, isAoeHeal: true, restoreRes: 30, ultGen: 30, level: 1, exp: 0 },
+                { name: '영웅 진혼곡(궁)', cost: 100, isUlt: true, dmg: 3.5, heal: 0.5, isAoeHeal: true, applyBuff: '공격력증가', buffVal: 0.5, isAoeBuff: true, restoreRes: 50, isRevive: true, reviveHp: 0.5, level: 1, exp: 0 }
+            ], awakeSkill: { name: '✨ 세이렌의 축복 (각성)', cost: 50, dmg: 2.0, heal: 0.5, isAoeHeal: true, applyBuff: '공격력증가', buffVal: 0.6, isAoeBuff: true, restoreRes: 40, isAwake: true } },
+
+            spellblade: { name: '마검사', role: '하이브리드', hp: 480, atk: 55, res: 140, resType: 'MP', desc: '빙결 스택 ➔ 얼음 부수기', skills: [
+                { name: '마력 베기', cost: 0, dmg: 1.1, ultGen: 15, level: 1, exp: 0 },
+                { name: '서리 칼날', cost: 30, dmg: 1.5, applyStatus: '빙결', stackable: true, ultGen: 20, level: 1, exp: 0 },
+                { name: '얼음 부수기', cost: 40, dmg: 1.2, consumeStatus: '빙결', comboDmg: 2.6, ultGen: 25, level: 1, exp: 0 },
+                { name: '번개 쇄도 (승천 대기)', cost: 45, dmg: 2.8, applyStatus: '감전', stackable: true, ultGen: 25, level: 1, exp: 0 },
+                { name: '초월 베기 (궁)', cost: 100, isUlt: true, dmg: 5.0, applyStatus: '빙결', stackable: true, level: 1, exp: 0 }
+            ], awakeSkill: { name: '✨ 소울 브레이커 (각성)', cost: 45, dmg: 6.0, consumeStatus: '빙결', comboDmg: 3.5, isAwake: true } }
+        };
+
+        Object.keys(rawClassBase).forEach(k => {
+            baseClassData[k] = {
+                ...rawClassBase[k],
+                ascensionSkills: createAscensionSkills(rawClassBase[k].name)
+            };
+        });
+
+        const bossPrefixes = ['광포한', '맹독의', '고대', '타락한', '심연의', '칠흑의', '파괴의', '불멸의', '초월의', '공포의'];
+        const bossTypes = ['늑대왕', '스파이더 퀸', '골렘 코어', '성기사', '심연의 군주', '드래곤', '데몬 로드', '타이탄', '수호신', '태초의 재앙'];
+        const bossData = [];
+        for (let i = 1; i <= 100; i++) {
+            let prefix = bossPrefixes[(i - 1) % bossPrefixes.length];
+            let type = bossTypes[Math.floor((i - 1) / 10) % bossTypes.length];
+            bossData.push({
+                name: `${i}. ${prefix} ${type}`,
+                hp: 3000 + (i * 1500),
+                atk: 45 + (i * 18)
+            });
+        }
+
+        let gameMode = 'pve';
+        let fastModeActive = false;
+        let selectedClassKeys = []; 
+        let classPersistentStorage = {}; 
+        
+        let playerGold = 500;
+        let maxUnlockedStage = 0;
+        let selectedStageIndex = 0;
+        let party = [];
+        let currentBoss = {};
+        let bossStatuses = {}; 
+        let bossIndex = 0;
+        let activeHeroIndex = 0;
+        
+        let pvpTeam1 = [];
+        let pvpTeam2 = [];
+
+        function initPersistentStorage() {
+            Object.keys(baseClassData).forEach(key => {
+                if (!classPersistentStorage[key]) {
+                    classPersistentStorage[key] = {
+                        gearLevel: 1,
+                        skills: JSON.parse(JSON.stringify(baseClassData[key].skills)),
+                        classLevel: 1,
+                        classExp: 0,
+                        awakened: false,
+                        bossesKilledAfterAwake: 0,
+                        ascensionUnlocked: false
+                    };
+                }
+            });
+        }
+
+        function toggleFastMode() {
+            playSound('click');
+            fastModeActive = document.getElementById('fast-mode-checkbox').checked;
+        }
+
+        function renderClassSelection() {
+            initPersistentStorage();
+            const container = document.getElementById('class-buttons');
+            container.innerHTML = '';
+            Object.keys(baseClassData).forEach(key => {
+                const cls = baseClassData[key];
+                const storedData = classPersistentStorage[key];
+                const gearName = classGearData[key][storedData.gearLevel - 1];
+                
+                let awakeBtnHtml = '';
+                if (storedData.classLevel >= 10 && !storedData.awakened) {
+                    awakeBtnHtml = `<button style="margin-top:2px; font-size:9px; background:#3b0764; color:var(--evolve-color); border:1px solid var(--evolve-color); padding:3px 6px; cursor:pointer; font-weight:bold;" onclick="event.stopPropagation(); triggerClassAwakening('${key}')">✨ 직업 각성!</button>`;
+                } else if (storedData.awakened) {
+                    awakeBtnHtml = `<span style="font-size:9px; color:var(--evolve-color); font-weight:bold;">✨ 각성 완료</span>`;
+                }
+
+                let ascendHtml = storedData.ascensionUnlocked ? `<span style="font-size:9px; color:var(--ascend-color); font-weight:bold;">🌟 승천 완료 (5스킬)</span>` : '';
+                if (storedData.awakened && !storedData.ascensionUnlocked) {
+                    ascendHtml = `<span style="font-size:9px; color:var(--ascend-color);">⚔️ 승천: ${storedData.bossesKilledAfterAwake}/3</span>`;
+                }
+
+                container.innerHTML += `
+                    <button class="class-btn" onclick="playSound('click'); selectHero('${key}')">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span class="class-name">${cls.name}</span>
+                            <span style="font-size:9px; color:var(--ascend-color); font-weight:bold;">Lv.${storedData.classLevel}</span>
+                        </div>
+                        <span class="class-desc">${cls.desc}</span>
+                        <div style="font-size:9px; color:var(--accent);">🗡️ 장비: ${gearName} (+${storedData.gearLevel})</div>
+                        ${awakeBtnHtml}
+                        ${ascendHtml}
+                    </button>`;
+            });
+            updateStageDropdown();
+            updateSelectionUI();
+        }
+
+        function triggerClassAwakening(key) {
+            playSound('trans');
+            let stored = classPersistentStorage[key];
+            stored.awakened = true;
+            stored.skills.forEach((s) => {
+                s.name = `[각성] ${s.name}`;
+                s.dmg = (s.dmg || 1.0) * 1.8;
+            });
+            const baseData = baseClassData[key];
+            if (baseData.awakeSkill && !stored.skills.some(s => s.isAwake)) {
+                stored.skills.push(baseData.awakeSkill);
+            }
+            alert(`🎉 [${baseData.name}] 직업 각성 완료! 모든 스킬이 리모델링되었습니다!`);
+            renderClassSelection();
+        }
+
+        function updateStageDropdown() {
+            const selectEl = document.getElementById('stage-select');
+            selectEl.innerHTML = '';
+            for (let i = 0; i <= maxUnlockedStage; i++) {
+                selectEl.innerHTML += `<option value="${i}" ${i === selectedStageIndex ? 'selected' : ''}>${bossData[i].name}</option>`;
+            }
+        }
+
+        function changeSelectedStage() {
+            const selectEl = document.getElementById('stage-select');
+            selectedStageIndex = parseInt(selectEl.value);
+        }
+
+        function selectHero(key) {
+            let maxParty = gameMode === 'pvp' ? 6 : 3;
+            if (selectedClassKeys.length >= maxParty) return;
+            if (gameMode === 'pvp') {
+                if (selectedClassKeys.length >= 6) return;
+            } else {
+                if (selectedClassKeys.includes(key)) return; // PVE는 중복 방지, PVP는 팀별 구성 허용
+            }
+            
+            selectedClassKeys.push(key);
+            updateSelectionUI();
+        }
+
+        function cancelHero(index) {
+            playSound('click');
+            if (index < selectedClassKeys.length) {
+                selectedClassKeys.splice(index, 1);
+                updateSelectionUI();
+            }
+        }
+
+        function upgradeGear(key) {
+            playSound('click');
+            let storedData = classPersistentStorage[key];
+            let cost = storedData.gearLevel * 100;
+            if (playerGold >= cost && storedData.gearLevel < 10) {
+                playerGold -= cost;
+                storedData.gearLevel++;
+                updateSelectionUI();
+            } else if (playerGold < cost) {
+                alert('골드가 부족합니다!');
+            }
+        }
+
+        function updateSelectionUI() {
+            document.getElementById('player-gold').innerText = playerGold;
+            let maxParty = gameMode === 'pvp' ? 6 : 3;
+            
+            document.getElementById('pve-stage-box').style.display = (gameMode === 'pve') ? 'flex' : 'none';
+            document.getElementById('select-title').innerText = gameMode === 'pve' ? '영웅 선택 (3인 파티)' : `영웅 선택 (3:3 대전 - 현재 ${selectedClassKeys.length}/6 선택됨)`;
+
+            const slotsContainer = document.getElementById('party-slots');
+            slotsContainer.innerHTML = '';
+            for (let i = 0; i < maxParty; i++) {
+                let isTeam2Header = (gameMode === 'pvp' && i === 3);
+                let headerHtml = isTeam2Header ? `<div style="width:100%; text-align:center; color:var(--accent); font-weight:bold; font-size:12px; margin:5px 0;">--- [PVP] 팀 2 영웅 슬롯 ---</div>` : '';
+                
+                let slotHtml = '';
+                if (i < selectedClassKeys.length) {
+                    const key = selectedClassKeys[i];
+                    const clsInfo = baseClassData[key];
+                    const storedData = classPersistentStorage[key];
+                    const gearName = classGearData[key][storedData.gearLevel - 1];
+                    let awakeBadge = storedData.awakened ? `<span class="slot-passive">✨ 각성 완료</span>` : '';
+                    let ascendBadge = storedData.ascensionUnlocked ? `<span class="slot-trans">🌟 승천 완료</span>` : '';
+                    slotHtml = `
+                        <div class="slot filled" onclick="cancelHero(${i})" id="slot-${i}">
+                            <span class="slot-name">${gameMode==='pvp'?(i<3?'[팀1] ':'[팀2] '):''}${clsInfo.name}</span>
+                            <span class="slot-level">Lv.${storedData.classLevel}</span>
+                            <span class="slot-gear">${gearName} (+${storedData.gearLevel})</span>
+                            ${awakeBadge} ${ascendBadge}
+                            <button style="margin-top:2px; font-size:9px; padding:2px 4px; cursor:pointer;" onclick="event.stopPropagation(); upgradeGear('${key}')">강화 (${storedData.gearLevel*100}G)</button>
+                            <span class="slot-cancel">취소</span>
+                        </div>`;
+                } else {
+                    slotHtml = `
+                        <div class="slot" id="slot-${i}">
+                            <span class="slot-name">${gameMode==='pvp'?(i<3?'[팀1 슬롯 ':'[팀2 슬롯 '):'비어있음'} ${ (gameMode==='pvp')?((i%3)+1)+'':''}</span>
+                            <span class="slot-gear">영웅을 선택하세요</span>
+                        </div>`;
+                }
+                slotsContainer.innerHTML += headerHtml + slotHtml;
+            }
+            
+            let reqCount = gameMode === 'pvp' ? 6 : 3;
+            document.getElementById('start-btn').style.display = selectedClassKeys.length === reqCount ? 'inline-block' : 'none';
+        }
+
+        function switchMode(mode) {
+            playSound('click');
+            gameMode = mode;
+            selectedClassKeys = [];
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`mode-${mode}-btn`).classList.add('active');
+            renderClassSelection();
+        }
+
+        function startBattle() {
+            playSound('click');
+            
+            if (gameMode === 'pve') {
+                party = selectedClassKeys.map((key, index) => createHeroObject(key, index, 0));
+            } else {
+                // 3:3 PVP
+                pvpTeam1 = selectedClassKeys.slice(0, 3).map((key, index) => createHeroObject(key, index, 1));
+                pvpTeam2 = selectedClassKeys.slice(3, 6).map((key, index) => createHeroObject(key, index + 3, 2));
+                party = [...pvpTeam1, ...pvpTeam2];
+            }
+
+            renderBattlePartyPanel();
+            document.getElementById('battle-log').innerHTML = '';
+            document.getElementById('selection-screen').classList.remove('active');
+            document.getElementById('battle-screen').classList.add('active');
+            document.getElementById('next-control').style.display = 'none';
+
+            if (gameMode === 'pve') {
+                bossIndex = selectedStageIndex;
+                loadBoss();
+            } else {
+                initPvpBattle();
+            }
+        }
+
+        function createHeroObject(key, index, teamId) {
+            const baseData = baseClassData[key];
+            const storedData = classPersistentStorage[key];
+            let bonusAtk = (storedData.gearLevel - 1) * 8 + (storedData.classLevel * 5); 
+            if (storedData.gearLevel === 10) bonusAtk += 50; 
+            if (storedData.awakened) bonusAtk += 80;
+            if (storedData.ascensionUnlocked) bonusAtk += 150;
+            
+            let activeSkills = JSON.parse(JSON.stringify(storedData.skills));
+            
+            return { 
+                ...baseData, 
+                id: index, 
+                team: teamId,
+                gearKey: key, 
+                gearLevel: storedData.gearLevel, 
+                skills: activeSkills, 
+                maxHp: baseData.hp + (storedData.classLevel * 20) + (storedData.ascensionUnlocked ? 300 : 0), 
+                currentHp: baseData.hp + (storedData.classLevel * 20) + (storedData.ascensionUnlocked ? 300 : 0), 
+                maxRes: baseData.res, 
+                currentRes: baseData.res, 
+                currentUlt: 0, 
+                atk: baseData.atk + bonusAtk,
+                atkBuff: 0 
+            };
+        }
+
+        function renderBattlePartyPanel() {
+            let partyPanelHtml = '';
+            party.forEach(h => {
+                let weaponName = classGearData[h.gearKey][h.gearLevel - 1];
+                let storedData = classPersistentStorage[h.gearKey];
+                let teamTag = gameMode === 'pvp' ? `<span style="color:${h.team===1?'#3b82f6':'#ef4444'}">[팀${h.team}]</span> ` : '';
+                partyPanelHtml += `
+                    <div class="hero-card" id="hero-card-${h.id}">
+                        <div style="font-weight:bold; font-size:12px; margin-bottom:2px;">${teamTag}${h.name}</div>
+                        <div style="font-size:9px; color:var(--accent);">${weaponName} (+${h.gearLevel})</div>
+                        <div class="stat-text" style="margin-top:3px;"><span>HP</span> <span id="hp-txt-${h.id}">0/0</span></div>
+                        <div class="bar-container"><div id="hp-bar-${h.id}" class="bar" style="background:var(--hp-color); width:100%;"></div></div>
+                        <div class="stat-text"><span>${h.resType}</span> <span id="res-txt-${h.id}">0/0</span></div>
+                        <div class="bar-container"><div id="res-bar-${h.id}" class="bar" style="background:${h.resType==='MP'?'var(--mp-color)':'var(--sp-color)'}; width:100%;"></div></div>
+                        <div class="stat-text"><span>궁극기</span> <span id="ult-txt-${h.id}">0%</span></div>
+                        <div class="bar-container"><div id="ult-bar-${h.id}" class="bar" style="background:var(--ult-color); width:0%;"></div></div>
+                    </div>`;
+            });
+            document.getElementById('party-panel').innerHTML = partyPanelHtml;
+        }
+
+        function savePartyProgress() {
+            party.forEach(h => {
+                if (h.gearKey && classPersistentStorage[h.gearKey]) {
+                    classPersistentStorage[h.gearKey].skills = JSON.parse(JSON.stringify(h.skills));
+                }
+            });
+        }
+
+        function loadBoss() {
+            if (bossIndex >= bossData.length) {
+                playSound('victory');
+                log(`<br><span style="color:#22c55e; font-size:15px;">🏆 100단계 모든 레이드 보스를 토벌했습니다!</span>`);
+                document.getElementById('action-btns').innerHTML = '';
+                return;
+            }
+            const bData = bossData[bossIndex];
+            currentBoss = { ...bData, maxHp: bData.hp, currentHp: bData.hp };
+            bossStatuses = {};
+            
+            document.getElementById('boss-name').innerText = currentBoss.name;
+            log(`<br><span style="color:#fb7185;">⚠️ [레이드 시작] ${currentBoss.name} 등장!</span>`);
+            
+            activeHeroIndex = -1;
+            nextHeroTurn();
+        }
+
+        function updateUI() {
+            if (gameMode === 'pve') {
+                document.getElementById('boss-name').innerText = currentBoss.name;
+                document.getElementById('boss-hp-txt').innerText = `${Math.floor(Math.max(0, currentBoss.currentHp))} / ${currentBoss.maxHp}`;
+                document.getElementById('boss-hp').style.width = `${(currentBoss.currentHp / currentBoss.maxHp) * 100}%`;
+                document.getElementById('boss-phase').innerText = currentBoss.currentHp <= (currentBoss.maxHp / 2) ? '[페이즈 2: 광폭화]' : '[페이즈 1]';
+                
+                let statusHtml = '';
+                const tooltips = {
+                    '출혈': '매 턴 지속 피해를 주는 출혈 상태 (호버 설명)',
+                    '화상': '뜨거운 불길로 체력을 태우는 화상 상태',
+                    '중독': '치명적인 독이 퍼지는 중독 상태',
+                    '표식': '약점이 노출된 표식 상태',
+                    '기절': '행동을 할 수 없는 기절 상태',
+                    '저주': '어둠의 저주에 걸린 상태'
+                };
+                for (let s in bossStatuses) {
+                    let tip = tooltips[s] || '상태이상 효과입니다.';
+                    statusHtml += `<span class="status-tag" data-tooltip="${tip}">${s} (${bossStatuses[s]}스택)</span>`;
+                }
+                document.getElementById('boss-statuses').innerHTML = statusHtml;
+            } else {
+                document.getElementById('boss-name').innerText = '3:3 팀 대전 전투 중';
+                document.getElementById('boss-hp-txt').innerText = 'PVP 모드';
+                document.getElementById('boss-hp').style.width = '100%';
+                document.getElementById('boss-phase').innerText = '[실시간 턴제 배틀]';
+                document.getElementById('boss-statuses').innerHTML = '<span class="status-tag" data-tooltip="팀원과 협동하여 승리하세요">PVP 아레나</span>';
+            }
+
+            party.forEach(h => {
+                document.getElementById(`hp-txt-${h.id}`).innerText = `${Math.floor(Math.max(0, h.currentHp))}/${h.maxHp}`;
+                document.getElementById(`hp-bar-${h.id}`).style.width = `${(h.currentHp / h.maxHp) * 100}%`;
+                
+                document.getElementById(`res-txt-${h.id}`).innerText = `${Math.floor(Math.max(0, h.currentRes))}/${h.maxRes}`;
+                document.getElementById(`res-bar-${h.id}`).style.width = `${(h.currentRes / h.maxRes) * 100}%`;
+                
+                document.getElementById(`ult-txt-${h.id}`).innerText = `${Math.floor(h.currentUlt)}%`;
+                document.getElementById(`ult-bar-${h.id}`).style.width = `${h.currentUlt}%`;
+                
+                const card = document.getElementById(`hero-card-${h.id}`);
+                card.classList.remove('active', 'dead');
+                if (h.currentHp <= 0) card.classList.add('dead');
+                else if (h.id === activeHeroIndex) card.classList.add('active');
+            });
+        }
+
+        function log(msg) {
+            const bLog = document.getElementById('battle-log');
+            bLog.innerHTML += `<div>${msg}</div>`;
+            bLog.scrollTop = bLog.scrollHeight;
+        }
+
+        function nextHeroTurn() {
+            let eligibleHeroes = gameMode === 'pve' ? party : party.filter(h => h.currentHp > 0);
+            
+            do { 
+                activeHeroIndex++; 
+            } while (activeHeroIndex < party.length && party[activeHeroIndex].currentHp <= 0);
+
+            if (activeHeroIndex >= party.length) {
+                activeHeroIndex = -1;
+                document.getElementById('action-btns').innerHTML = ''; 
+                updateUI();
+                if (gameMode === 'pve') {
+                    setTimeout(bossTurn, 1000);
+                } else {
+                    activeHeroIndex = party.findIndex(h => h.currentHp > 0);
+                    if(activeHeroIndex !== -1) {
+                        renderActionButtons();
+                        updateUI();
+                    }
+                }
+            } else {
+                renderActionButtons();
+                updateUI();
+                log(`▶ <span style="color:var(--accent);">[${party[activeHeroIndex].name}]</span>의 턴`);
+            }
+        }
+
+        function renderActionButtons() {
+            const hero = party[activeHeroIndex];
+            const container = document.getElementById('action-btns');
+            container.innerHTML = '';
+            
+            hero.skills.forEach((skill, idx) => {
+                const canUse = skill.isUlt ? hero.currentUlt >= 100 : hero.currentRes >= skill.cost;
+                let costText = skill.isUlt ? '궁극기 100%' : (skill.cost === 0 ? '소모 없음' : `${hero.resType} ${skill.cost}`);
+                let skillTitle = skill.isAwake || skill.isAscend ? skill.name : `${skill.name} (Lv.${skill.level})`;
+                let extraText = '';
+                
+                if(skill.applyStatus) extraText += `<span style="color:#10b981; font-size:9px;">[${skill.applyStatus}]</span>`;
+                if(skill.consumeStatus) extraText += `<span style="color:var(--combo-color); font-size:9px;">[콤보폭발]</span>`;
+                if(skill.isAwake) extraText += `<span style="color:var(--evolve-color); font-size:9px;">[각성기]</span>`;
+                if(skill.isAscend) extraText += `<span style="color:var(--ascend-color); font-size:9px;">[승천]</span>`;
+
+                let btnClass = skill.isUlt ? 'btn-ult' : (skill.isAwake ? 'btn-awake' : (skill.isAscend ? 'btn-ascend' : ''));
+
+                container.innerHTML += `
+                    <button class="action-btn ${btnClass}" ${canUse ? '' : 'disabled'} onclick="useSkill(${idx})">
+                        <span style="font-weight:bold;">${skillTitle}</span>
+                        ${extraText}
+                        <span class="action-cost">${costText}</span>
+                    </button>`;
+            });
+            container.innerHTML += `
+                <button class="action-btn" onclick="useFocus()">
+                    <span>정신 집중</span>
+                    <span style="color:#a1a1aa; font-size:9px;">[휴식]</span>
+                    <span class="action-cost">자원 40 회복</span>
+                </button>`;
+        }
+
+        function useFocus() {
+            playSound('click');
+            const hero = party[activeHeroIndex];
+            hero.currentRes = Math.min(hero.maxRes, hero.currentRes + 40);
+            log(` - ${hero.name}이(가) 자원을 40 회복했습니다.`);
+            finishTurn();
+        }
+
+        function useSkill(skillIdx) {
+            const hero = party[activeHeroIndex];
+            const skill = hero.skills[skillIdx];
+            
+            if (skill.isUlt) {
+                playSound('ult');
+                hero.currentUlt = 0;
+            } else if (skill.isAwake) {
+                playSound('ult');
+                hero.currentRes -= skill.cost;
+            } else if (skill.isAscend) {
+                playSound('trans');
+                hero.currentRes -= skill.cost;
+                hero.currentUlt = Math.min(100, hero.currentUlt + (skill.ultGen || 20));
+            } else {
+                playSound('skill');
+                hero.currentRes -= skill.cost; 
+                hero.currentUlt = Math.min(100, hero.currentUlt + (skill.ultGen || 0));
+            }
+
+            let levelBonus = 1;
+            if (!skill.isAwake && !skill.isAscend) {
+                let expGain = fastModeActive ? 100 : 1;
+                skill.exp += expGain;
+                let maxLevelReq = skill.level * 3;
+                if (skill.exp >= maxLevelReq && skill.level < 10) {
+                    skill.level++;
+                    skill.exp = 0;
+                    log(`🎉 <span style="color:var(--evolve-color); font-weight:bold;">[${hero.name}]의 [${skill.name}] 스킬이 레벨 ${skill.level}로 성장했습니다!</span>`);
+                }
+                levelBonus = 1 + (skill.level - 1) * 1.0;
+            } else if (skill.isAwake) {
+                levelBonus = 12.0;
+            } else if (skill.isAscend) {
+                levelBonus = 14.0;
+            }
+
+            let stored = classPersistentStorage[hero.gearKey];
+            if (stored && stored.classLevel < 10) {
+                stored.classExp += (fastModeActive ? 10 : 1);
+                let neededExp = stored.classLevel * 15;
+                if (stored.classExp >= neededExp) {
+                    stored.classLevel++;
+                    stored.classExp = 0;
+                    log(`👑 <span style="color:var(--ascend-color); font-weight:bold;">[${hero.name}]의 직업 레벨이 Lv.${stored.classLevel}로 상승했습니다!</span>`);
+                }
+            }
+
+            savePartyProgress();
+
+            let totalAtk = hero.atk * (1 + hero.atkBuff);
+            let variance = Math.floor(Math.random() * (totalAtk * 0.15));
+            let multiplier = (skill.dmg || 0) * levelBonus;
+            let isCombo = false;
+
+            if (skill.consumeStatus && gameMode === 'pve') {
+                let currentStack = bossStatuses[skill.consumeStatus] || 0;
+                if (currentStack > 0) {
+                    isCombo = true;
+                    multiplier = skill.comboDmg * levelBonus * currentStack; 
+                    delete bossStatuses[skill.consumeStatus]; 
+                }
+            }
+
+            let damage = Math.floor(totalAtk * multiplier + variance);
+            playSound(damage > 100 ? 'attack' : 'skill');
+
+            let healAmt = skill.heal ? Math.floor(hero.maxHp * skill.heal * levelBonus) : 0;
+            
+            let msg = ` - ${hero.name}의 <span style="font-weight:bold;">[${skill.name}]</span>!`;
+            if (isCombo) msg += ` <span style="color:var(--combo-color); font-weight:bold;">★ 스택 콤보 폭발! ★</span>`;
+            
+            if (gameMode === 'pve') {
+                if (damage > 0) msg += ` (보스에게 ${damage} 피해)`;
+                currentBoss.currentHp -= damage;
+                if (skill.applyStatus) {
+                    let stackAdd = (skill.level >= 10 || skill.isAscend) ? 3 : 1;
+                    bossStatuses[skill.applyStatus] = (bossStatuses[skill.applyStatus] || 0) + stackAdd;
+                    msg += ` <span style="color:#10b981;">[${skill.applyStatus} +${stackAdd}스택]</span>`;
+                }
+            } else {
+                // PVP 3:3 대전 대상 타격 (적 팀 중 생존한 대상 무작위 또는 첫 번째)
+                let enemyTeam = hero.team === 1 ? party.filter(h => h.team === 2 && h.currentHp > 0) : party.filter(h => h.team === 1 && h.currentHp > 0);
+                if (enemyTeam.length > 0) {
+                    let target = enemyTeam[Math.floor(Math.random() * enemyTeam.length)];
+                    target.currentHp -= damage;
+                    msg += ` ([팀${target.team}] ${target.name}에게 ${damage} 피해)`;
+                }
+            }
+            log(msg);
+
+            if (healAmt > 0) {
+                playSound('heal');
+                let myTeamHeroes = gameMode === 'pve' ? party : party.filter(h => h.team === hero.team && h.currentHp > 0);
+                if (skill.isAoeHeal) {
+                    myTeamHeroes.forEach(h => { if(h.currentHp > 0) h.currentHp = Math.min(h.maxHp, h.currentHp + healAmt); });
+                    log(` ↳ <span style="color:#10b981;">(아군 전체 HP ${healAmt} 회복)</span>`);
+                } else {
+                    let target = myTeamHeroes.sort((a,b) => (a.currentHp/a.maxHp) - (b.currentHp/b.maxHp))[0];
+                    if(target) {
+                        target.currentHp = Math.min(target.maxHp, target.currentHp + healAmt);
+                        log(` ↳ <span style="color:#10b981;">[${target.name}] HP ${healAmt} 회복</span>`);
+                    }
+                }
+            }
+
+            finishTurn();
+        }
+
+        function finishTurn() {
+            document.getElementById('action-btns').innerHTML = ''; 
+            updateUI();
+            savePartyProgress();
+
+            if (gameMode === 'pve') {
+                if (currentBoss.currentHp <= 0) {
+                    playSound('victory');
+                    let baseGold = 300 + (bossIndex * 150);
+                    let goldGain = fastModeActive ? baseGold * 100 : baseGold;
+                    playerGold += goldGain;
+                    log(`<br><span style="color:#3b82f6; font-weight:bold;">[스테이지 클리어] ${currentBoss.name} 격파! (보상 ${goldGain}G)</span>`);
+                    
+                    party.forEach(h => {
+                        let stored = classPersistentStorage[h.gearKey];
+                        if (stored && stored.awakened && !stored.ascensionUnlocked) {
+                            stored.bossesKilledAfterAwake++;
+                            log(`<span style="color:var(--ascend-color);">🌟 [승천의 길] ${h.name} 보스 토벌 (${stored.bossesKilledAfterAwake}/3)</span>`);
+                            if (stored.bossesKilledAfterAwake >= 3 && stored.classLevel >= 5) {
+                                stored.ascensionUnlocked = true;
+                                playSound('trans');
+                                let newAscendSkills = createAscensionSkills(baseClassData[h.gearKey].name);
+                                stored.skills.splice(3, 1, ...newAscendSkills);
+                                h.skills = JSON.parse(JSON.stringify(stored.skills));
+                                log(`<br><span style="color:var(--ascend-color); font-size:15px; font-weight:bold;">✨🎊 [승천의 길 완성!] ${h.name} 신규 스킬 5종 개방!</span>`);
+                            }
+                        }
+                    });
+
+                    if (bossIndex >= maxUnlockedStage && maxUnlockedStage < bossData.length - 1) {
+                        maxUnlockedStage = bossIndex + 1;
+                    }
+                    selectedStageIndex = Math.min(bossData.length - 1, bossIndex + 1);
+                    document.getElementById('next-control').style.display = 'flex'; 
+                } else {
+                    setTimeout(nextHeroTurn, 800);
+                }
+            } else {
+                // PVP 3:3 승패 판정
+                let team1Alive = party.filter(h => h.team === 1 && h.currentHp > 0).length;
+                let team2Alive = party.filter(h => h.team === 2 && h.currentHp > 0).length;
+
+                if (team1Alive === 0 || team2Alive === 0) {
+                    playSound('victory');
+                    let winner = team1Alive > 0 ? '팀 1 (플레이어 영웅들)' : '팀 2 (상대 파티)';
+                    log(`<br><span style="color:var(--accent); font-size:16px; font-weight:bold;">🏆 [PVP 승리] ${winner} 승리!</span>`);
+                    document.getElementById('next-control').style.display = 'flex';
+                    return;
+                }
+                nextHeroTurn();
+            }
+        }
+
+        function nextStage() {
+            playSound('click');
+            bossIndex++;
+            document.getElementById('next-control').style.display = 'none';
+            loadBoss();
+        }
+
+        function returnToSelection() {
+            playSound('click');
+            savePartyProgress();
+            document.getElementById('battle-screen').classList.remove('active');
+            document.getElementById('selection-screen').classList.add('active');
+            renderClassSelection();
+        }
+
+        function bossTurn() {
+            if (currentBoss.currentHp <= 0) return;
+            let aliveHeroes = party.filter(h => h.currentHp > 0);
+            if (aliveHeroes.length === 0) return;
+
+            const isPhase2 = currentBoss.currentHp <= (currentBoss.maxHp / 2);
+            let bossDmg = currentBoss.atk + Math.floor(Math.random() * (currentBoss.atk * 0.15));
+
+            if(bossStatuses['기절']) {
+                log(`<br><span style="color:#a1a1aa;">◀ [보스] 기절 상태로 행동 불가!</span>`);
+                delete bossStatuses['기절'];
+            } else {
+                playSound('attack');
+                if (isPhase2) {
+                    log(`<br><span style="color:#fb7185; font-weight:bold;">◀ [보스] 광폭화 전체 공격!</span>`);
+                    aliveHeroes.forEach(h => {
+                        let dmg = Math.floor(bossDmg * 0.6);
+                        h.currentHp -= dmg;
+                        h.currentUlt = Math.min(100, h.currentUlt + 15); 
+                        log(` ↳ <span style="color:#fb7185;">${h.name}에게 ${dmg} 피해!</span>`);
+                    });
+                } else {
+                    let target = aliveHeroes[Math.floor(Math.random() * aliveHeroes.length)];
+                    log(`<br><span style="color:#fb7185; font-weight:bold;">◀ [보스] ${currentBoss.name}의 강력한 공격!</span>`);
+                    target.currentHp -= bossDmg;
+                    target.currentUlt = Math.min(100, target.currentUlt + 25);
+                    log(` ↳ <span style="color:#fb7185;">${target.name}에게 ${bossDmg} 피해!</span>`);
+                }
+            }
+
+            updateUI();
+
+            if (party.every(h => h.currentHp <= 0)) {
+                log(`<br><span style="color:#ef4444; font-weight:bold;">[전멸] 파티가 모두 쓰러졌습니다...</span>`);
+                document.getElementById('next-control').style.display = 'flex';
+                return;
+            }
+            
+            party.forEach(h => { if(h.currentHp > 0) h.currentRes = Math.min(h.maxRes, h.currentRes + 15); });
+            setTimeout(nextHeroTurn, 1200);
+        }
+
+        function initPvpBattle() {
+            activeHeroIndex = 0;
+            log(`<br><span style="color:var(--accent); font-weight:bold;">⚔️ 3:3 팀 대전 PVP 아레나 시작!</span>`);
+            renderActionButtons();
+            updateUI();
+        }
+
+        renderClassSelection();
+    </script>
+</body>
+</html>
